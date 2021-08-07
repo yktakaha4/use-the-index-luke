@@ -47,3 +47,27 @@ UPDATE employees
  WHERE employee_id=123;
 --
 ANALYZE TABLE employees;
+-- add subsidiary_id and update existing records
+ALTER TABLE employees ADD subsidiary_id NUMERIC;
+UPDATE      employees SET subsidiary_id = 30;
+ALTER TABLE employees MODIFY subsidiary_id NUMERIC NOT NULL;
+-- change the PK
+ALTER TABLE employees DROP PRIMARY KEY;
+ALTER TABLE employees ADD CONSTRAINT employees_pk
+      PRIMARY KEY (employee_id, subsidiary_id);
+-- generate more records (Very Big Company)
+INSERT INTO employees (employee_id,  first_name,
+                       last_name,    date_of_birth,
+                       phone_number, subsidiary_id, junk)
+SELECT gen.n + 1
+     , GROUP_CONCAT(CHAR( RAND()*25 + 97) SEPARATOR '')
+     , GROUP_CONCAT(CHAR( RAND()*25 + 97) SEPARATOR '')
+     , CURDATE() - INTERVAL (RAND(0)*365*10 + 40*365) DAY
+     , FLOOR(RAND()*9000 + 1000)
+     , FLOOR(RAND()*(gen.n/9000)*29 + 1)
+     , 'junk'
+  FROM generator_64k gen, generator_16 rand
+ WHERE gen.n < 9000
+ GROUP BY gen.n;
+--
+ANALYZE TABLE employees;
